@@ -80,6 +80,16 @@ int panel_get_display_timing(struct udevice *dev,
 	return ops->get_display_timing(dev, timings);
 }
 
+int panel_get_rotation(struct udevice *dev)
+{
+	struct panel_ops *ops = panel_get_ops(dev);
+
+	if (!ops->get_rotation)
+		return 0;
+
+	return ops->get_rotation(dev);
+}
+
 UCLASS_DRIVER(panel) = {
 	.id = UCLASS_PANEL,
 	.name = "panel",

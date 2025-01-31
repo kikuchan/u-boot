@@ -46,6 +46,14 @@ struct panel_ops {
 	 */
 	int (*get_display_timing)(struct udevice *dev,
 				  struct display_timing *timing);
+
+	/**
+	 * get_rotation() - Get the panel rotation
+	 *
+	 * @dev:	Panel device
+	 * @return rotation
+	 */
+	int (*get_rotation)(struct udevice *dev);
 };
 
 #define panel_get_ops(dev)	((struct panel_ops *)(dev)->driver->ops)
@@ -84,4 +92,11 @@ int panel_set_backlight(struct udevice *dev, int percent);
 int panel_get_display_timing(struct udevice *dev,
 			     struct display_timing *timing);
 
+/**
+ * panel_get_rotation() - Get the panel rotation
+ *
+ * @dev:	Panel device
+ * Return: rotation in degrees. 0 when not supported.
+ */
+int panel_get_rotation(struct udevice *dev);
 #endif
