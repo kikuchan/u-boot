@@ -281,6 +281,14 @@ config SIMPLE_PANEL
 	  This turns on a simple panel driver that enables a compatible
 	  video panel.
 
+config MIPI_PANEL
+	bool "Enable MIPI based DSI/DPI(+SPI) panel support"
+	depends on PANEL && BACKLIGHT && DM_GPIO && (SPI || VIDEO_MIPI_DSI)
+	default y
+	help
+	  This turns on a Generic MIPI-DSI/DPI(+SPI) panel driver that enables
+	  a MIPI-compatible video panel.
+
 config PANEL_HX8238D
 	bool "Enable Himax HX-8238D LCD driver"
 	depends on PANEL
