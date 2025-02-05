@@ -845,6 +845,14 @@ config HASH
 	  and the algorithms it supports are defined in common/hash.c. See
 	  also CMD_HASH for command-line access.
 
+config HASH_CRC8
+	bool "Make crc8 available via the hash API"
+	depends on HASH && CRC8
+	help
+	  Most times, the crc8() function is called directly. To make it also
+	  available via the hash API, e.g. in hash_block(), enable this
+	  option.
+
 config AVB_VERIFY
 	bool "Build Android Verified Boot operations"
 	depends on LIBAVB
@@ -927,6 +935,9 @@ config BOARD_RNG_SEED
 	  to ensure a given seed is only used once, how to create a
 	  new seed for use on subsequent boots, and whether or not the
 	  kernel should account any entropy from the given seed.
+
+	  Default seed size (64 bytes) can be overridden by a decimal
+	  environment variable rng_seed_size.
 
 endmenu
 
@@ -1036,6 +1047,8 @@ if BLOBLIST
 
 choice
 	prompt "Bloblist location"
+	default BLOBLIST_FIXED if SANDBOX
+	default BLOBLIST_ALLOC
 	help
 	  Select the location of the bloblist, via various means.
 
@@ -1078,6 +1091,7 @@ config BLOBLIST_SIZE_RELOC
 	hex "Size of bloblist after relocation"
 	default BLOBLIST_SIZE if BLOBLIST_FIXED || BLOBLIST_ALLOC
 	default 0x0 if BLOBLIST_PASSAGE
+	default 0x20000 if (ARM && EFI_LOADER && GENERATE_ACPI_TABLE)
 	help
 	  Sets the size of the bloblist in bytes after relocation. Since U-Boot
 	  has a lot more memory available then, it is possible to use a larger

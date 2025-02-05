@@ -525,11 +525,11 @@ config KS8851_MLL
 	  The Microchip KS8851 parallel bus external ethernet interface chip.
 
 config KSZ9477
-	bool "Microchip KSZ9477 I2C controller driver"
-	depends on DM_DSA && DM_I2C
+	bool "Microchip KSZ9477 controller driver"
+	depends on DM_DSA && (DM_I2C || DM_SPI)
 	help
 	  This driver implements a DSA switch driver for the KSZ9477 family
-	  of GbE switches using the I2C interface.
+	  of GbE switches using the I2C or SPI interface.
 
 config LITEETH
 	bool "LiteX LiteEth Ethernet MAC"
@@ -762,6 +762,38 @@ config TULIP
 	help
 	  This driver supports DEC DC2114x Fast ethernet chips.
 
+config TULIP_SUPPORT_NON_PCI
+	bool "No PCI controller"
+	depends on TULIP
+	default n
+	help
+	  Say Y to this and you can run this driver on platforms that do not
+	  have PCI controllers.
+
+config TULIP_IGNORE_TX_NO_CARRIER
+	bool "Ignore tx no carrier error"
+	depends on TULIP
+	default n
+	help
+	  Some IP cores of dc2114x or its variants do not comply so well with
+	  the behaviors described by the official document. A packet could be
+	  sent successfully but reported with No Carrier error. Latest drivers
+	  of this IP core do not detect this error anymore. Say Y to this could
+	  disable handling of this error.
+
+config TULIP_MULTIPLE_TX_DESC
+	bool "Use multiple tx descriptors"
+	depends on TULIP
+	default n
+	help
+	  Some IP cores of dc2114x or its variants do not comply so well with
+	  the behaviors described by the official document. Originally this
+	  driver uses only one tx descriptor and organizes it as a ring buffer,
+	  which would lead to a problem that one packet would be sent twice.
+	  Say Y to this could prevent this bug if you are using IP cores with
+	  this issue, by using multiple tx descriptors and organizing them as
+	  a real well-defined ring buffer.
+
 config XILINX_AXIEMAC
 	select PHYLIB
 	select MII
@@ -934,14 +966,7 @@ config TSEC_ENET
 	  This driver implements support for the (Enhanced) Three-Speed
 	  Ethernet Controller found on Freescale SoCs.
 
-config MEDIATEK_ETH
-	bool "MediaTek Ethernet GMAC Driver"
-	select PHYLIB
-	select DM_GPIO
-	select DM_RESET
-	help
-	  This Driver support MediaTek Ethernet GMAC
-	  Say Y to enable support for the MediaTek Ethernet GMAC.
+source "drivers/net/mtk_eth/Kconfig"
 
 config HIFEMAC_ETH
 	bool "HiSilicon Fast Ethernet Controller"
@@ -974,6 +999,26 @@ config FSL_ENETC
 	help
 	  This driver supports the NXP ENETC Ethernet controller found on some
 	  of the NXP SoCs.
+
+config FSL_ENETC_NETC_BLK_CTRL
+	bool "NXP ENETC NETC blocks control driver"
+	depends on FSL_ENETC && IMX95
+	default y if IMX95
+	help
+	  This driver configures Integrated Endpoint Register Block (IERB) and
+	  Privileged Register Block (PRB) of NETC. For i.MX platforms, it also
+	  includes the configuration of NETCMIX block.
+	  The IERB contains registers that are used for pre-boot initialization,
+	  debug, and non-customer configuration. The PRB controls global reset
+	  and global error handling for NETC. The NETCMIX block is mainly used
+	  to set MII protocol and PCS protocol of the links, it also contains
+	  settings for some other functions.
+
+config MDIO_GPIO_BITBANG
+	bool "GPIO bitbanging MDIO driver"
+	depends on DM_MDIO && DM_GPIO
+	help
+	 Driver for bitbanging MDIO
 
 config MDIO_MUX_I2CREG
 	bool "MDIO MUX accessed as a register over I2C"

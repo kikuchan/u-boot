@@ -560,12 +560,12 @@ static int ravb_remove(struct udevice *dev)
 	return 0;
 }
 
-int ravb_bb_init(struct bb_miiphy_bus *bus)
+static int ravb_bb_init(struct bb_miiphy_bus *bus)
 {
 	return 0;
 }
 
-int ravb_bb_mdio_active(struct bb_miiphy_bus *bus)
+static int ravb_bb_mdio_active(struct bb_miiphy_bus *bus)
 {
 	struct ravb_priv *eth = bus->priv;
 
@@ -574,7 +574,7 @@ int ravb_bb_mdio_active(struct bb_miiphy_bus *bus)
 	return 0;
 }
 
-int ravb_bb_mdio_tristate(struct bb_miiphy_bus *bus)
+static int ravb_bb_mdio_tristate(struct bb_miiphy_bus *bus)
 {
 	struct ravb_priv *eth = bus->priv;
 
@@ -583,7 +583,7 @@ int ravb_bb_mdio_tristate(struct bb_miiphy_bus *bus)
 	return 0;
 }
 
-int ravb_bb_set_mdio(struct bb_miiphy_bus *bus, int v)
+static int ravb_bb_set_mdio(struct bb_miiphy_bus *bus, int v)
 {
 	struct ravb_priv *eth = bus->priv;
 
@@ -595,7 +595,7 @@ int ravb_bb_set_mdio(struct bb_miiphy_bus *bus, int v)
 	return 0;
 }
 
-int ravb_bb_get_mdio(struct bb_miiphy_bus *bus, int *v)
+static int ravb_bb_get_mdio(struct bb_miiphy_bus *bus, int *v)
 {
 	struct ravb_priv *eth = bus->priv;
 
@@ -604,7 +604,7 @@ int ravb_bb_get_mdio(struct bb_miiphy_bus *bus, int *v)
 	return 0;
 }
 
-int ravb_bb_set_mdc(struct bb_miiphy_bus *bus, int v)
+static int ravb_bb_set_mdc(struct bb_miiphy_bus *bus, int v)
 {
 	struct ravb_priv *eth = bus->priv;
 
@@ -616,7 +616,7 @@ int ravb_bb_set_mdc(struct bb_miiphy_bus *bus, int v)
 	return 0;
 }
 
-int ravb_bb_delay(struct bb_miiphy_bus *bus)
+static int ravb_bb_delay(struct bb_miiphy_bus *bus)
 {
 	udelay(10);
 
@@ -649,7 +649,6 @@ static const struct eth_ops ravb_ops = {
 int ravb_of_to_plat(struct udevice *dev)
 {
 	struct eth_pdata *pdata = dev_get_plat(dev);
-	const fdt32_t *cell;
 
 	pdata->iobase = dev_read_addr(dev);
 
@@ -657,10 +656,7 @@ int ravb_of_to_plat(struct udevice *dev)
 	if (pdata->phy_interface == PHY_INTERFACE_MODE_NA)
 		return -EINVAL;
 
-	pdata->max_speed = 1000;
-	cell = fdt_getprop(gd->fdt_blob, dev_of_offset(dev), "max-speed", NULL);
-	if (cell)
-		pdata->max_speed = fdt32_to_cpu(*cell);
+	pdata->max_speed = dev_read_u32_default(dev, "max-speed", 1000);
 
 	sprintf(bb_miiphy_buses[0].name, dev->name);
 

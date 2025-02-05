@@ -58,198 +58,196 @@ config DRAM_SUN50I_A133
 	  like A133.
 
 if DRAM_SUN50I_H616 || DRAM_SUN50I_A133
-config DRAM_SUN50I_DX_ODT
+config DRAM_SUNXI_DX_ODT
 	hex "DRAM DX ODT parameter"
 	help
 	  DX ODT value from vendor DRAM settings.
 
-config DRAM_SUN50I_DX_DRI
+config DRAM_SUNXI_DX_DRI
 	hex "DRAM DX DRI parameter"
 	help
 	  DX DRI value from vendor DRAM settings.
 
-config DRAM_SUN50I_CA_DRI
+config DRAM_SUNXI_CA_DRI
 	hex "DRAM CA DRI parameter"
 	help
 	  CA DRI value from vendor DRAM settings.
 
-config DRAM_SUN50I_ODT_EN
+config DRAM_SUNXI_ODT_EN
 	hex "DRAM ODT EN parameter"
 	default 0x1
 	help
 	  ODT EN value from vendor DRAM settings.
 
-config DRAM_SUN50I_PARA0
+config DRAM_SUNXI_PARA0
 	hex "DRAM PARA0 parameter"
 	depends on DRAM_SUN50I_A133
 	help
 	  PARA0 value from vendor DRAM settings.
 
-config DRAM_SUN50I_PARA1
+config DRAM_SUNXI_PARA1
 	hex "DRAM PARA1 parameter"
 	help
 	  PARA1 value from vendor DRAM settings.
 
-config DRAM_SUN50I_PARA2
+config DRAM_SUNXI_PARA2
 	hex "DRAM PARA2 parameter"
 	help
 	  PARA2 value from vendor DRAM settings.
 
-config DRAM_SUN50I_MR0
+config DRAM_SUNXI_MR0
 	hex "DRAM MR0 parameter"
 	depends on DRAM_SUN50I_A133
-	default 0x0
 	help
 	  MR0 value from vendor DRAM settings.
 
-config DRAM_SUN50I_MR1
+config DRAM_SUNXI_MR1
 	hex "DRAM MR1 parameter"
 	depends on DRAM_SUN50I_A133
 	default 0x0
 	help
 	  MR1 value from vendor DRAM settings.
 
-config DRAM_SUN50I_MR2
+config DRAM_SUNXI_MR2
 	hex "DRAM MR2 parameter"
 	depends on DRAM_SUN50I_A133
 	default 0x0
 	help
 	  MR2 value from vendor DRAM settings.
 
-config DRAM_SUN50I_MR3
+config DRAM_SUNXI_MR3
 	hex "DRAM MR3 parameter"
 	depends on DRAM_SUN50I_A133
 	default 0x0
 	help
 	  MR3 value from vendor DRAM settings.
 
-config DRAM_SUN50I_MR4
+config DRAM_SUNXI_MR4
 	hex "DRAM MR4 parameter"
 	depends on DRAM_SUN50I_A133
 	default 0x0
 	help
 	  MR4 value from vendor DRAM settings.
 
-config DRAM_SUN50I_MR5
+config DRAM_SUNXI_MR5
 	hex "DRAM MR5 parameter"
 	depends on DRAM_SUN50I_A133
 	default 0x0
 	help
 	  MR5 value from vendor DRAM settings.
 
-config DRAM_SUN50I_MR6
+config DRAM_SUNXI_MR6
 	hex "DRAM MR6 parameter"
 	depends on DRAM_SUN50I_A133
 	default 0x0
 	help
 	  MR6 value from vendor DRAM settings.
 
-config DRAM_SUN50I_MR11
+config DRAM_SUNXI_MR11
 	hex "DRAM MR11 parameter"
 	depends on DRAM_SUN50I_A133
 	default 0x0
 	help
 	  MR11 value from vendor DRAM settings.
 
-config DRAM_SUN50I_MR12
+config DRAM_SUNXI_MR12
 	hex "DRAM MR12 parameter"
 	depends on DRAM_SUN50I_A133
 	default 0x0
 	help
 	  MR12 value from vendor DRAM settings.
 
-config DRAM_SUN50I_MR13
+config DRAM_SUNXI_MR13
 	hex "DRAM MR13 parameter"
 	depends on DRAM_SUN50I_A133
 	default 0x0
 	help
 	  MR13 value from vendor DRAM settings.
 
-config DRAM_SUN50I_MR14
+config DRAM_SUNXI_MR14
 	hex "DRAM MR14 parameter"
 	depends on DRAM_SUN50I_A133
 	default 0x0
 	help
 	  MR14 value from vendor DRAM settings.
 
-config DRAM_SUN50I_MR16
+config DRAM_SUNXI_MR16
 	hex "DRAM MR16 parameter"
 	depends on DRAM_SUN50I_A133
 	default 0x0
 	help
 	  MR16 value from vendor DRAM settings.
 
-config DRAM_SUN50I_MR17
+config DRAM_SUNXI_MR17
 	hex "DRAM MR17 parameter"
 	depends on DRAM_SUN50I_A133
 	default 0x0
 	help
 	  MR17 value from vendor DRAM settings.
 
-config DRAM_SUN50I_MR22
+config DRAM_SUNXI_MR22
 	hex "DRAM MR22 parameter"
 	depends on !DRAM_SUN50I_A133
 	default 0x0
 	help
 	  MR22 value from vendor DRAM settings.
 
-config DRAM_SUN50I_TPR1
+config DRAM_SUNXI_TPR0
+	hex "DRAM TPR0 parameter"
+	default 0x0
+	help
+	  TPR0 value from vendor DRAM settings.
+
+config DRAM_SUNXI_TPR1
 	hex "DRAM TPR1 parameter"
 	default 0x0
 	help
 	  TPR1 value from vendor DRAM settings.
 
-config DRAM_SUN50I_TPR2
+config DRAM_SUNXI_TPR2
 	hex "DRAM TPR2 parameter"
 	default 0x0
 	help
 	  TPR2 value from vendor DRAM settings.
 
-config DRAM_SUN50I_TPR2
-	hex "DRAM TPR2 parameter"
-	depends on !DRAM_SUN50I_A133
-	default 0x0
-	help
-	  TPR2 value from vendor DRAM settings.
-
-config DRAM_SUN50I_TPR3
+config DRAM_SUNXI_TPR3
 	hex "DRAM TPR3 parameter"
 	default 0x0
 	help
 	  TPR3 value from vendor DRAM settings.
 
-config DRAM_SUN50I_TPR6
+config DRAM_SUNXI_TPR6
 	hex "DRAM TPR6 parameter"
 	default 0x33808080
 	help
 	  TPR6 value from vendor DRAM settings.
 
-config DRAM_SUN50I_TPR10
+config DRAM_SUNXI_TPR10
 	hex "DRAM TPR10 parameter"
 	help
 	  TPR10 value from vendor DRAM settings. It tells which features
 	  should be configured, like write leveling, read calibration, etc.
 
-config DRAM_SUN50I_TPR11
+config DRAM_SUNXI_TPR11
 	hex "DRAM TPR11 parameter"
 	default 0x0
 	help
 	  TPR11 value from vendor DRAM settings.
 
-config DRAM_SUN50I_TPR12
+config DRAM_SUNXI_TPR12
 	hex "DRAM TPR12 parameter"
 	default 0x0
 	help
 	  TPR12 value from vendor DRAM settings.
 
-config DRAM_SUN50I_TPR13
+config DRAM_SUNXI_TPR13
 	hex "DRAM TPR13 parameter"
 	depends on DRAM_SUN50I_A133
 	default 0x0
 	help
 	  TPR13 value from vendor DRAM settings.
 
-config DRAM_SUN50I_TPR14
+config DRAM_SUNXI_TPR14
 	hex "DRAM TPR14 parameter"
 	depends on DRAM_SUN50I_A133
 	default 0x0
@@ -258,15 +256,15 @@ config DRAM_SUN50I_TPR14
 
 choice
 	prompt "DRAM PHY pin mapping selection"
-	default DRAM_SUN50I_PHY_ADDR_MAP_0
+	default DRAM_SUNXI_PHY_ADDR_MAP_0
 
-config DRAM_SUN50I_PHY_ADDR_MAP_0
+config DRAM_SUNXI_PHY_ADDR_MAP_0
 	bool "DRAM PHY address map 0"
 	help
 	  This pin mapping selection should be used by the H313, H616, H618,
 	  and A133, R818 SoCs.
 
-config DRAM_SUN50I_PHY_ADDR_MAP_1
+config DRAM_SUNXI_PHY_ADDR_MAP_1
 	bool "DRAM PHY address map 1"
 	help
 	  This pin mapping selection should be used by the H700.
@@ -426,6 +424,7 @@ config MACH_SUNIV
 	select SUPPORT_SPL
 	select SKIP_LOWLEVEL_INIT_ONLY
 	select SPL_SKIP_LOWLEVEL_INIT_ONLY
+	imply OF_UPSTREAM
 
 config MACH_SUN4I
 	bool "sun4i (Allwinner A10)"
@@ -435,6 +434,7 @@ config MACH_SUN4I
 	select SUPPORT_SPL
 	imply SPL_SYS_I2C_LEGACY
 	imply SYS_I2C_LEGACY
+	imply OF_UPSTREAM
 
 config MACH_SUN5I
 	bool "sun5i (Allwinner A13)"
@@ -444,6 +444,7 @@ config MACH_SUN5I
 	select SUPPORT_SPL
 	imply SPL_SYS_I2C_LEGACY
 	imply SYS_I2C_LEGACY
+	imply OF_UPSTREAM
 
 config MACH_SUN6I
 	bool "sun6i (Allwinner A31)"

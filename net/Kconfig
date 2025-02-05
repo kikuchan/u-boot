@@ -90,7 +90,7 @@ config TFTP_WINDOWSIZE
 config TFTP_TSIZE
 	bool "Track TFTP transfers based on file size option"
 	depends on CMD_TFTPBOOT
-	default y if (ARCH_OMAP2PLUS || ARCH_K3)
+	default y if (ARCH_OMAP2PLUS || ARCH_K3 || ARCH_RENESAS)
 	help
 	  By default, TFTP progress bar is increased for each received UDP
 	  frame, which can lead into long time being spent for sending
@@ -243,6 +243,15 @@ config NET_RANDOM_ETHADDR
 	  a random MAC address in the locally administered address space is
 	  generated. It will be saved to the appropriate environment variable,
 	  too.
+
+config WGET
+	bool "Enable wget"
+	select PROT_TCP if NET
+	select PROT_TCP_LWIP if NET_LWIP
+	select PROT_DNS_LWIP if NET_LWIP
+	help
+	  Selecting this will enable wget, an interface to send HTTP requests
+	  via the network stack.
 
 config TFTP_BLOCKSIZE
 	int "TFTP block size"

@@ -8,6 +8,7 @@
 #include <env.h>
 #include <hexdump.h>
 #include <linux/if_ether.h>
+#include <linux/sizes.h>
 #include <linux/types.h>
 #include <rand.h>
 #include <time.h>
@@ -68,7 +69,7 @@ struct ip_udp_hdr {
 	u16		udp_dst;	/* UDP destination port		*/
 	u16		udp_len;	/* Length of UDP packet		*/
 	u16		udp_xsum;	/* Checksum			*/
-} __attribute__((packed));
+} __packed;
 
 #define IP_UDP_HDR_SIZE		(sizeof(struct ip_udp_hdr))
 #define UDP_HDR_SIZE		(IP_UDP_HDR_SIZE - IP_HDR_SIZE)
@@ -84,13 +85,13 @@ struct ip_udp_hdr {
  */
 #define ARP_HLEN_ASCII (ARP_HLEN * 2) + (ARP_HLEN - 1)
 
-#define ARP_HDR_SIZE	(8+20)		/* Size assuming ethernet	*/
+#define ARP_HDR_SIZE	(8 + 20)	/* Size assuming ethernet	*/
 
 #   define ARP_ETHER	    1		/* Ethernet  hardware address	*/
 
 /*
  * Maximum packet size; used to allocate packet storage. Use
- * the maxium Ethernet frame size as specified by the Ethernet
+ * the maximum Ethernet frame size as specified by the Ethernet
  * standard including the 802.1Q tag (VLAN tagging).
  * maximum packet size =  1522
  * maximum packet size and multiple of 32 bytes =  1536
@@ -129,7 +130,7 @@ extern char *pxelinux_configfile;
  * @nbytes:	Number of bytes to check (normally a multiple of 2)
  * Return: 16-bit IP checksum
  */
-unsigned compute_ip_checksum(const void *addr, unsigned nbytes);
+unsigned compute_ip_checksum(const void *addr, unsigned int nbytes);
 
 /**
  * ip_checksum_ok() - check if a checksum is correct
@@ -140,7 +141,7 @@ unsigned compute_ip_checksum(const void *addr, unsigned nbytes);
  * @nbytes:	Number of bytes to check (normally a multiple of 2)
  * Return: true if the checksum matches, false if not
  */
-int ip_checksum_ok(const void *addr, unsigned nbytes);
+int ip_checksum_ok(const void *addr, unsigned int nbytes);
 
 /**
  * add_ip_checksums() - add two IP checksums
@@ -150,7 +151,7 @@ int ip_checksum_ok(const void *addr, unsigned nbytes);
  * @new_sum:	New checksum to add
  * Return: updated 16-bit IP checksum
  */
-unsigned add_ip_checksums(unsigned offset, unsigned sum, unsigned new_sum);
+unsigned add_ip_checksums(unsigned offset, unsigned sum, unsigned int new_sum);
 
 /*
  * The devname can be either an exact name given by the driver or device tree
@@ -185,7 +186,7 @@ int eth_env_get_enetaddr_by_index(const char *base_name, int index,
  * Return: 0 if OK, other value on error
  */
 int eth_env_set_enetaddr_by_index(const char *base_name, int index,
-				 uchar *enetaddr);
+				  uchar *enetaddr);
 
 /*
  * Initialize USB ethernet device with CONFIG_DM_ETH
@@ -231,7 +232,7 @@ static inline void net_send_packet(uchar *pkt, int len)
 	if (DEBUG_NET_PKT_TRACE)
 		print_hex_dump_bytes("tx: ", DUMP_PREFIX_OFFSET, pkt, len);
 	/* Currently no way to return errors from eth_send() */
-	(void) eth_send(pkt, len);
+	(void)eth_send(pkt, len);
 }
 
 enum eth_recv_flags {
@@ -327,7 +328,7 @@ struct ethernet_hdr {
 	u8		et_dest[ARP_HLEN];	/* Destination node	*/
 	u8		et_src[ARP_HLEN];	/* Source node		*/
 	u16		et_protlen;		/* Protocol or length	*/
-} __attribute__((packed));
+} __packed;
 
 /* Ethernet header size */
 #define ETHER_HDR_SIZE	(sizeof(struct ethernet_hdr))
@@ -425,6 +426,16 @@ void string_to_enetaddr(const char *addr, uint8_t *enetaddr);
  */
 struct in_addr string_to_ip(const char *s);
 
+/**
+ * ip_to_string() - Convert an IPv4 address to a string
+ *
+ * Implemented in lib/net_utils.c (built unconditionally)
+ *
+ * @x: Input ip to parse
+ * @s: string containing the parsed ip address
+ */
+void ip_to_string(struct in_addr x, char *s);
+
 /* copy a filename (allow for "..." notation, limit length) */
 void copy_filename(char *dst, const char *src, int size);
 
@@ -445,10 +456,10 @@ void net_process_received_packet(uchar *in_packet, int len);
 int update_tftp(ulong addr, char *interface, char *devstring);
 
 /**
- * env_get_ip() - Convert an environment value to to an ip address
+ * env_get_ip() - Convert an environment value to an ip address
  *
  * @var: Environment variable to convert. The value of this variable must be
- *	in the format format a.b.c.d, where each value is a decimal number from
+ *	in the format a.b.c.d, where each value is a decimal number from
  *	0 to 255
  * Return: IP address, or 0 if invalid
  */
@@ -490,13 +501,16 @@ int dhcp_run(ulong addr, const char *fname, bool autoload);
 int do_tftpb(struct cmd_tbl *cmdtp, int flag, int argc, char *const argv[]);
 
 /**
- * wget_with_dns() - runs dns host IP address resulution before wget
+ * wget_do_request() - sends a wget request
+ *
+ * Sends a wget request, if DNS resolution is enabled it resolves the
+ * given uri.
  *
  * @dst_addr:	destination address to download the file
  * @uri:	uri string of target file of wget
- * Return:	downloaded file size, negative if failed
+ * Return:	zero on success, negative if failed
  */
-int wget_with_dns(ulong dst_addr, char *uri);
+int wget_do_request(ulong dst_addr, char *uri);
 /**
  * wget_validate_uri() - varidate the uri
  *
@@ -505,5 +519,56 @@ int wget_with_dns(ulong dst_addr, char *uri);
  */
 bool wget_validate_uri(char *uri);
 //int do_wget(struct cmd_tbl *cmdtp, int flag, int argc, char * const argv[]);
+
+/**
+ * enum wget_http_method - http method
+ */
+enum wget_http_method {
+	WGET_HTTP_METHOD_GET,
+	WGET_HTTP_METHOD_POST,
+	WGET_HTTP_METHOD_PATCH,
+	WGET_HTTP_METHOD_OPTIONS,
+	WGET_HTTP_METHOD_CONNECT,
+	WGET_HTTP_METHOD_HEAD,
+	WGET_HTTP_METHOD_PUT,
+	WGET_HTTP_METHOD_DELETE,
+	WGET_HTTP_METHOD_TRACE,
+	WGET_HTTP_METHOD_MAX
+};
+
+/**
+ * define MAX_HTTP_HEADERS_SIZE - maximum headers buffer size
+ *
+ * When receiving http headers, wget fills a buffer with up
+ * to MAX_HTTP_HEADERS_SIZE bytes of header information.
+ */
+#define MAX_HTTP_HEADERS_SIZE SZ_64K
+
+/**
+ * struct wget_http_info - wget parameters
+ * @method:		HTTP Method. Filled by client.
+ * @status_code:	HTTP status code. Filled by wget.
+ * @file_size:		download size. Filled by wget.
+ * @buffer_size:	size of client-provided buffer. Filled by client.
+ * @set_bootdev:	set boot device with download. Filled by client.
+ * @check_buffer_size:	check download does not exceed buffer size.
+ *			Filled by client.
+ * @hdr_cont_len:	content length according to headers. Filled by wget
+ * @headers:		buffer for headers. Filled by wget.
+ */
+struct wget_http_info {
+	enum wget_http_method method;
+	u32 status_code;
+	ulong file_size;
+	ulong buffer_size;
+	bool set_bootdev;
+	bool check_buffer_size;
+	u32 hdr_cont_len;
+	char *headers;
+};
+
+extern struct wget_http_info default_wget_info;
+extern struct wget_http_info *wget_info;
+int wget_request(ulong dst_addr, char *uri, struct wget_http_info *info);
 
 #endif /* __NET_COMMON_H__ */

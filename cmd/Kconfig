@@ -176,6 +176,12 @@ config CMD_CPU
 	  internal name) and clock frequency. Other information may be
 	  available depending on the CPU driver.
 
+config CMD_UFETCH
+	bool "U-Boot fetch"
+	help
+	  Fetch utility for U-Boot (akin to neofetch). Prints information
+	  about U-Boot and the board it is running on in a pleasing format.
+
 config CMD_FWU_METADATA
 	bool "fwu metadata read"
 	depends on FWU_MULTI_BANK_UPDATE
@@ -274,13 +280,13 @@ config CMD_BOOTM
 	  Boot an application image from the memory.
 
 config CMD_BOOTM_PRE_LOAD
-       bool "enable pre-load on bootm"
-       depends on CMD_BOOTM
-       depends on IMAGE_PRE_LOAD
-       help
-	 Enable support of stage pre-load for the bootm command.
-	 This stage allow to check or modify the image provided
-	 to the bootm command.
+	bool "enable pre-load on bootm"
+	depends on CMD_BOOTM
+	depends on IMAGE_PRE_LOAD
+	help
+	  Enable support of stage pre-load for the bootm command.
+	  This stage allow to check or modify the image provided
+	  to the bootm command.
 
 config CMD_BOOTDEV
 	bool "bootdev"
@@ -318,6 +324,15 @@ config CMD_BOOTMETH
 	  Support listing available bootmeths (methods used to boot an
 	  Operating System), as well as selecting the order that the bootmeths
 	  are used.
+
+	  This command is not necessary for bootstd to work.
+
+config CMD_BOOTSTD
+	bool "bootstd"
+	depends on BOOTSTD
+	default y if BOOTSTD_FULL
+	help
+	  Provide general information and control for bootstd.
 
 	  This command is not necessary for bootstd to work.
 
@@ -885,8 +900,20 @@ config MD5SUM_VERIFY
 
 config CMD_MEMINFO
 	bool "meminfo"
+	default y if SANDBOX || X86
 	help
 	  Display memory information.
+
+config CMD_MEMINFO_MAP
+	bool "- with memory map"
+	depends on CMD_MEMINFO
+	default y if SANDBOX || X86
+	help
+	  Shows a memory map, in addition to just the DRAM size. This allows
+	  seeing where U-Boot's memory area is, at the top of DRAM, as well as
+	  detail about each piece of it.
+
+	  See doc/usage/cmd/meminfo.rst for more information.
 
 config CMD_MEMORY
 	bool "md, mm, nm, mw, cp, cmp, base, loop"
@@ -1434,6 +1461,12 @@ config CMD_OPTEE_RPMB
 	  in the Replay Protection Memory Block partition in eMMC by
 	  using Persistent Objects in OPTEE
 
+config CMD_OPTEE
+	bool "Enable OP-TEE commands"
+	depends on OPTEE
+	help
+	 OP-TEE commands support.
+
 config CMD_MTD
 	bool "mtd"
 	depends on MTD
@@ -1477,6 +1510,11 @@ config CMD_NAND_TORTURE
 	bool "nand torture"
 	help
 	  NAND torture support.
+
+config CMD_NAND_WATCH
+	bool "nand watch"
+	help
+	  NAND watch bitflip support.
 
 endif # CMD_NAND
 
@@ -1773,26 +1811,12 @@ config CMD_SETEXPR_FMT
 	depends on CMD_SETEXPR
 	help
 	  Evaluate format string expression and store result in an environment
-	    variable.
+	  variable.
 
 config CMD_XXD
 	bool "xxd"
 	help
 	  Print file as hexdump to standard output
-
-endmenu
-
-menu "Android support commands"
-
-config CMD_AB_SELECT
-	bool "ab_select"
-	depends on ANDROID_AB
-	help
-	  On Android devices with more than one boot slot (multiple copies of
-	  the kernel and system images) this provides a command to select which
-	  slot should be used to boot from and register the boot attempt. This
-	  is used by the new A/B update model where one slot is updated in the
-	  background while running from the other slot.
 
 endmenu
 
@@ -2018,7 +2042,9 @@ config CMD_PING6
 config CMD_CDP
 	bool "cdp"
 	help
-	  Perform CDP network configuration
+	  The cdp command is used to announce the U-Boot device in the network
+	  and to retrieve configuration data including the VLAN id using the
+	  proprietary Cisco Discovery Protocol (CDP).
 
 config CMD_SNTP
 	bool "sntp"
@@ -2117,14 +2143,30 @@ config CMD_TFTPBOOT
 
 config CMD_WGET
 	bool "wget"
-	depends on CMD_NET
 	default y if SANDBOX
-	select PROT_TCP if NET
-	select PROT_TCP_LWIP if NET_LWIP
-	select PROT_DNS_LWIP if NET_LWIP
+	select WGET
 	help
 	  wget is a simple command to download kernel, or other files,
 	  from a http server over TCP.
+
+config WGET_HTTPS
+	bool "wget https"
+	depends on CMD_WGET
+	depends on PROT_TCP_LWIP
+	depends on MBEDTLS_LIB
+	select SHA256
+	select RSA
+	select ASYMMETRIC_KEY_TYPE
+	select ASYMMETRIC_PUBLIC_KEY_SUBTYPE
+	select X509_CERTIFICATE_PARSER
+	select PKCS7_MESSAGE_PARSER
+	select MBEDTLS_LIB_CRYPTO
+	select MBEDTLS_LIB_TLS
+	select RSA_VERIFY_WITH_PKEY
+	select X509_CERTIFICATE_PARSER
+	select PKCS7_MESSAGE_PARSER
+	help
+	  Enable TLS over http for wget.
 
 endif  # if CMD_NET
 
@@ -2196,10 +2238,10 @@ config CMD_BLKMAP
 	depends on BLKMAP
 	default y if BLKMAP
 	help
- 	  Create virtual block devices that are backed by various sources,
- 	  e.g. RAM, or parts of an existing block device. Though much more
- 	  rudimentary, it borrows a lot of ideas from Linux's device mapper
- 	  subsystem.
+	  Create virtual block devices that are backed by various sources,
+	  e.g. RAM, or parts of an existing block device. Though much more
+	  rudimentary, it borrows a lot of ideas from Linux's device mapper
+	  subsystem.
 
 	  Example use-cases:
 	  - Treat a region of RAM as a block device, i.e. a RAM disk. This let's
@@ -2838,17 +2880,6 @@ config MTDPARTS_DEFAULT
 	  Defines a default MTD partitioning scheme in the Linux MTD command
 	  line partitions format
 
-config CMD_YAFFS2
-	bool "yaffs2 - Access of YAFFS2 filesystem"
-	depends on YAFFS2
-	default y
-	help
-	  This provides commands for accessing a YAFFS2 filesystem. Yet
-	  Another Flash Filesystem 2 is a filesystem designed specifically
-	  for NAND flash. It incorporates bad-block management and ensures
-	  that device writes are sequential regardless of filesystem
-	  activity.
-
 config CMD_ZFS
 	bool "zfs - Access of ZFS filesystem"
 	help
@@ -2872,6 +2903,17 @@ config CMD_CBSYSINFO
 	  This provides information about the coreboot sysinfo table stored in
 	  memory by coreboot before jumping to U-Boot. It can be useful for
 	  debugging the beaaviour of coreboot or U-Boot.
+
+config CMD_CBCMOS
+	bool "cbcmos"
+	depends on X86
+	default y if SYS_COREBOOT
+	help
+	  This provides information options to check the CMOS RAM checksum,
+	  if present, as well as to update it.
+
+	  It is useful when coreboot CMOS-RAM settings must be examined or
+	  updated.
 
 config CMD_CYCLIC
 	bool "cyclic - Show information about cyclic functions"
@@ -2985,10 +3027,10 @@ config CMD_UBI
 	  partition support.
 
 config CMD_UBI_RENAME
-       bool "Enable rename"
-       depends on CMD_UBI
-       help
-	 Enable a "ubi" command to rename ubi volume:
+	bool "Enable rename"
+	depends on CMD_UBI
+	help
+	  Enable a "ubi" command to rename ubi volume:
 	   ubi rename <oldname> <newname>
 
 config CMD_UBIFS

@@ -55,27 +55,17 @@ dtb-$(CONFIG_MACH_S700) += \
 dtb-$(CONFIG_ROCKCHIP_RK3036) += \
 	rk3036-sdk.dtb
 
-dtb-$(CONFIG_ROCKCHIP_RK3066) += \
-	rk3066a-mk808.dtb
-
 dtb-$(CONFIG_ROCKCHIP_RK3128) += \
 	rk3128-evb.dtb
-
-dtb-$(CONFIG_ROCKCHIP_RK3188) += \
-	rk3188-radxarock.dtb
 
 dtb-$(CONFIG_ROCKCHIP_RK322X) += \
 	rk3229-evb.dtb
 
 dtb-$(CONFIG_ROCKCHIP_RK3288) += \
 	rk3288-evb.dtb \
-	rk3288-firefly.dtb \
-	rk3288-miqi.dtb \
 	rk3288-popmetal.dtb \
 	rk3288-rock2-square.dtb \
 	rk3288-rock-pi-n8.dtb \
-	rk3288-tinker.dtb \
-	rk3288-tinker-s.dtb \
 	rk3288-veyron-jerry.dtb \
 	rk3288-veyron-mickey.dtb \
 	rk3288-veyron-minnie.dtb \
@@ -190,7 +180,8 @@ dtb-$(CONFIG_ARCH_MVEBU) +=			\
 	cn9130-crb-A.dtb			\
 	cn9130-crb-B.dtb			\
 	ac5-98dx35xx-rd.dtb			\
-	ac5-98dx35xx-atl-x240.dtb
+	ac5-98dx35xx-atl-x240.dtb		\
+	cn9130-atl-x250.dtb
 endif
 
 dtb-$(CONFIG_ARCH_SYNQUACER) += synquacer-sc2a11-developerbox.dtb
@@ -274,6 +265,7 @@ dtb-$(CONFIG_ARCH_ZYNQMP) += \
 	zynqmp-mini-qspi-x1-stacked.dtb		\
 	zynqmp-mini-qspi-x2-single.dtb		\
 	zynqmp-mini-qspi-x2-stacked.dtb		\
+	zynqmp-binman-mini.dtb			\
 	zynqmp-sc-revB.dtb			\
 	zynqmp-sc-revC.dtb			\
 	zynqmp-sm-k24-revA.dtb			\
@@ -319,6 +311,7 @@ dtb-$(CONFIG_ARCH_ZYNQMP) += zynqmp-p-a2197-00-revA-x-prc-02-revA.dtb
 dtb-$(CONFIG_ARCH_ZYNQMP) += zynqmp-p-a2197-00-revA-x-prc-03-revA.dtb
 dtb-$(CONFIG_ARCH_ZYNQMP) += zynqmp-p-a2197-00-revA-x-prc-04-revA.dtb
 dtb-$(CONFIG_ARCH_ZYNQMP) += zynqmp-p-a2197-00-revA-x-prc-05-revA.dtb
+dtb-$(CONFIG_ARCH_ZYNQMP) += zynqmp-binman.dtb
 
 zynqmp-sc-vek280-revA-dtbs := zynqmp-sc-revB.dtb zynqmp-sc-vek280-revA.dtbo
 zynqmp-sc-vek280-revB-dtbs := zynqmp-sc-revC.dtb zynqmp-sc-vek280-revB.dtbo
@@ -327,6 +320,7 @@ zynqmp-sc-vpk120-revB-dtbs := zynqmp-sc-revB.dtb zynqmp-sc-vpk120-revB.dtbo
 zynqmp-sc-vpk180-revA-dtbs := zynqmp-sc-revB.dtb zynqmp-sc-vpk180-revA.dtbo
 zynqmp-sc-vpk180-revB-dtbs := zynqmp-sc-revB.dtb zynqmp-sc-vpk180-revB.dtbo
 zynqmp-sc-vn-p-b2197-00-revA-dtbs := zynqmp-sc-revB.dtb zynqmp-sc-vn-p-b2197-00-revA.dtbo
+zynqmp-sc-vm-p-b1369-00-revA-dtbs := zynqmp-sc-revB.dtb zynqmp-sc-vm-p-m1369-00-revA.dtbo
 
 dtb-$(CONFIG_ARCH_ZYNQMP) += zynqmp-sc-vek280-revA.dtb
 dtb-$(CONFIG_ARCH_ZYNQMP) += zynqmp-sc-vek280-revB.dtb
@@ -335,6 +329,7 @@ dtb-$(CONFIG_ARCH_ZYNQMP) += zynqmp-sc-vpk120-revB.dtb
 dtb-$(CONFIG_ARCH_ZYNQMP) += zynqmp-sc-vpk180-revA.dtb
 dtb-$(CONFIG_ARCH_ZYNQMP) += zynqmp-sc-vpk180-revB.dtb
 dtb-$(CONFIG_ARCH_ZYNQMP) += zynqmp-sc-vn-p-b2197-00-revA.dtb
+dtb-$(CONFIG_ARCH_ZYNQMP) += zynqmp-sc-vm-p-b1369-00-revA.dtb
 
 zynqmp-sm-k26-revA-sck-kv-g-revA-dtbs := zynqmp-sm-k26-revA.dtb zynqmp-sck-kv-g-revA.dtbo
 zynqmp-sm-k26-revA-sck-kv-g-revB-dtbs := zynqmp-sm-k26-revA.dtb zynqmp-sck-kv-g-revB.dtbo
@@ -367,6 +362,7 @@ dtb-$(CONFIG_ARCH_ZYNQMP) += zynqmp-sm-k24-revA-sck-kv-g-revB.dtb
 dtb-$(CONFIG_ARCH_ZYNQMP) += zynqmp-smk-k24-revA-sck-kv-g-revB.dtb
 dtb-$(CONFIG_ARCH_ZYNQMP) += zynqmp-sm-k24-revA-sck-kr-g-revB.dtb
 dtb-$(CONFIG_ARCH_ZYNQMP) += zynqmp-smk-k24-revA-sck-kr-g-revB.dtb
+dtb-$(CONFIG_ARCH_ZYNQMP) += zynqmp-binman-som.dtb
 
 dtb-$(CONFIG_ARCH_VERSAL) += \
 	versal-mini.dtb \
@@ -534,56 +530,12 @@ dtb-$(CONFIG_STM32H7) += stm32h743i-disco.dtb \
 	stm32h743i-eval.dtb \
 	stm32h750i-art-pi.dtb
 
-dtb-$(CONFIG_MACH_SUNIV) += \
-	suniv-f1c100s-licheepi-nano.dtb
 dtb-$(CONFIG_MACH_SUN4I) += \
-	sun4i-a10-a1000.dtb \
-	sun4i-a10-ba10-tvbox.dtb \
-	sun4i-a10-chuwi-v7-cw0825.dtb \
-	sun4i-a10-cubieboard.dtb \
-	sun4i-a10-dserve-dsrv9703c.dtb \
-	sun4i-a10-gemei-g9.dtb \
-	sun4i-a10-hackberry.dtb \
-	sun4i-a10-hyundai-a7hd.dtb \
-	sun4i-a10-inet1.dtb \
 	sun4i-a10-inet-3f.dtb \
-	sun4i-a10-inet-3w.dtb \
-	sun4i-a10-inet97fv2.dtb \
-	sun4i-a10-inet9f-rev03.dtb \
-	sun4i-a10-itead-iteaduino-plus.dtb \
-	sun4i-a10-jesurun-q5.dtb \
-	sun4i-a10-marsboard.dtb \
-	sun4i-a10-mini-xplus.dtb \
-	sun4i-a10-mk802.dtb \
-	sun4i-a10-mk802ii.dtb \
-	sun4i-a10-olinuxino-lime.dtb \
-	sun4i-a10-pcduino.dtb \
-	sun4i-a10-pcduino2.dtb \
-	sun4i-a10-pov-protab2-ips9.dtb \
-	sun4i-a10-topwise-a721.dtb
+	sun4i-a10-inet-3w.dtb
 dtb-$(CONFIG_MACH_SUN5I) += \
-	sun5i-a10s-auxtek-t003.dtb \
-	sun5i-a10s-auxtek-t004.dtb \
-	sun5i-a10s-mk802.dtb \
-	sun5i-a10s-olinuxino-micro.dtb \
-	sun5i-a10s-r7-tv-dongle.dtb \
-	sun5i-a10s-wobo-i5.dtb \
 	sun5i-a13-ampe-a76.dtb \
-	sun5i-a13-difrnce-dit4350.dtb \
-	sun5i-a13-empire-electronix-d709.dtb \
-	sun5i-a13-empire-electronix-m712.dtb \
-	sun5i-a13-hsg-h702.dtb \
-	sun5i-a13-inet-86vs.dtb \
-	sun5i-a13-inet-98v-rev2.dtb \
-	sun5i-a13-licheepi-one.dtb \
-	sun5i-a13-olinuxino.dtb \
-	sun5i-a13-olinuxino-micro.dtb \
-	sun5i-a13-pocketbook-touch-lux-3.dtb \
-	sun5i-a13-q8-tablet.dtb \
-	sun5i-a13-utoo-p66.dtb \
-	sun5i-gr8-chip-pro.dtb \
-	sun5i-gr8-evb.dtb \
-	sun5i-r8-chip.dtb
+	sun5i-a13-inet-86vs.dtb
 dtb-$(CONFIG_MACH_SUN6I) += \
 	sun6i-a31-app4-evb1.dtb \
 	sun6i-a31-colombus.dtb \
@@ -776,8 +728,6 @@ dtb-y += \
 	imx6dl-cubox-i.dtb \
 	imx6dl-cubox-i-emmc-som-v15.dtb \
 	imx6dl-cubox-i-som-v15.dtb \
-	imx6dl-dhcom-pdk2.dtb \
-	imx6dl-dhcom-picoitx.dts \
 	imx6dl-gw51xx.dtb \
 	imx6dl-gw52xx.dtb \
 	imx6dl-gw53xx.dtb \
@@ -809,8 +759,7 @@ dtb-y += \
 	imx6dl-sabreauto.dtb \
 	imx6dl-sabresd.dtb \
 	imx6dl-sielaff.dtb \
-	imx6dl-wandboard-revd1.dtb \
-	imx6s-dhcom-drc02.dtb
+	imx6dl-wandboard-revd1.dtb
 
 endif
 
@@ -822,7 +771,6 @@ dtb-y += \
 	imx6q-cubox-i.dtb \
 	imx6q-cubox-i-emmc-som-v15.dtb \
 	imx6q-cubox-i-som-v15.dtb \
-	imx6q-dhcom-pdk2.dtb \
 	imx6q-display5.dtb \
 	imx6q-gw51xx.dtb \
 	imx6q-gw52xx.dtb \
@@ -937,8 +885,7 @@ dtb-$(CONFIG_ARCH_IMX8) += \
 	fsl-imx8qxp-ai_ml.dtb \
 	fsl-imx8qxp-colibri.dtb \
 	fsl-imx8qxp-mek.dtb \
-	imx8-deneb.dtb \
-	imx8-giedi.dtb
+	imx8-capricorn-cxg3.dtb \
 
 dtb-$(CONFIG_ARCH_IMX8ULP) += \
 	imx8ulp-evk.dtb
@@ -976,13 +923,6 @@ dtb-$(CONFIG_ARCH_IMX9) += \
 dtb-$(CONFIG_ARCH_IMXRT) += imxrt1050-evk.dtb \
 	imxrt1020-evk.dtb \
 	imxrt1170-evk.dtb \
-
-dtb-$(CONFIG_TARGET_RZG2L) += \
-	r9a07g044l2-smarc.dts
-
-ifdef CONFIG_RCAR_64
-DTC_FLAGS += -R 4 -p 0x1000
-endif
 
 dtb-$(CONFIG_RZA1) += \
 	r7s72100-gr-peach.dtb
@@ -1135,6 +1075,7 @@ dtb-$(CONFIG_BCM6878) += \
 dtb-$(CONFIG_ASPEED_AST2500) += ast2500-evb.dtb
 dtb-$(CONFIG_ASPEED_AST2600) += \
 	ast2600-evb.dtb \
+	ast2600-sbp1.dtb \
 	ast2600-x4tf.dtb
 
 dtb-$(CONFIG_ARCH_STI) += stih410-b2260.dtb
@@ -1161,22 +1102,11 @@ dtb-$(CONFIG_STM32MP25X) += \
 	stm32mp257f-ev1.dtb
 
 dtb-$(CONFIG_SOC_K3_AM654) += \
-	k3-am654-base-board.dtb \
-	k3-am654-r5-base-board.dtb \
-	k3-am65-iot2050-spl.dtb \
-	k3-am6528-iot2050-basic.dtb \
-	k3-am6528-iot2050-basic-pg2.dtb \
-	k3-am6548-iot2050-advanced.dtb \
-	k3-am6548-iot2050-advanced-pg2.dtb \
-	k3-am6548-iot2050-advanced-m2.dtb \
-	k3-am6548-iot2050-advanced-m2-bkey-usb3-overlay.dtbo \
-	k3-am6548-iot2050-advanced-m2-bkey-ekey-pcie-overlay.dtbo \
-	k3-am654-icssg2.dtbo
+	k3-am654-r5-base-board.dtb
 
 dtb-$(CONFIG_SOC_K3_J721E) += k3-j721e-r5-common-proc-board.dtb \
 			      k3-j7200-r5-common-proc-board.dtb \
 			      k3-j721e-r5-sk.dtb \
-			      k3-j721e-beagleboneai64.dtb \
 			      k3-j721e-r5-beagleboneai64.dtb
 
 dtb-$(CONFIG_SOC_K3_J721S2) += k3-am68-sk-r5-base-board.dtb\
@@ -1196,7 +1126,9 @@ dtb-$(CONFIG_SOC_K3_AM625) += k3-am625-r5-sk.dtb \
 			      k3-am625-verdin-r5.dtb \
 			      k3-am625-r5-phycore-som-2gb.dtb
 
-dtb-$(CONFIG_SOC_K3_AM62A7) += k3-am62a7-r5-sk.dtb
+dtb-$(CONFIG_SOC_K3_AM62A7) += \
+	k3-am62a7-r5-sk.dtb \
+	k3-am62a7-r5-phycore-som-2gb.dtb
 
 dtb-$(CONFIG_SOC_K3_AM62P5) += k3-am62p5-r5-sk.dtb
 
@@ -1205,7 +1137,6 @@ dtb-$(CONFIG_ARCH_MEDIATEK) += \
 	mt7623a-unielec-u7623-02-emmc.dtb \
 	mt7622-bananapi-bpi-r64.dtb \
 	mt7623n-bananapi-bpi-r2.dtb \
-	mt7629-rfb.dtb \
 	mt7981-rfb.dtb \
 	mt7981-emmc-rfb.dtb \
 	mt7981-sd-rfb.dtb \
@@ -1294,6 +1225,8 @@ dtb-$(CONFIG_ARCH_QEMU) += qemu-arm.dtb qemu-arm64.dtb
 
 dtb-$(CONFIG_TARGET_CORSTONE1000) += corstone1000-mps3.dtb \
 				corstone1000-fvp.dtb
+
+dtb-$(CONFIG_TARGET_COREPRIMEVELTE) += pxa1908-samsung-coreprimevelte.dtb
 
 include $(srctree)/scripts/Makefile.dts
 

@@ -58,21 +58,27 @@ F:	cmd/acpi.c
 F:	include/acpi/
 F:	lib/acpi/
 
+ALIST:
+M:	Simon Glass <sjg@chromium.org>
+S:	Maintained
+F:	include/alist.h
+F:	lib/alist.c
+F:	test/lib/alist.c
+
 ANDROID AB
-M:	Igor Opaniuk <igor.opaniuk@gmail.com>
 M:	Mattijs Korpershoek <mkorpershoek@baylibre.com>
+R:	Igor Opaniuk <igor.opaniuk@gmail.com>
 R:	Sam Protsenko <semen.protsenko@linaro.org>
 S:	Maintained
 T:	git https://source.denx.de/u-boot/custodians/u-boot-dfu.git
 F:	boot/android_ab.c
-F:	cmd/ab_select.c
 F:	doc/android/ab.rst
 F:	include/android_ab.h
 F:	test/py/tests/test_android/test_ab.py
 
 ANDROID AVB
-M:	Igor Opaniuk <igor.opaniuk@gmail.com>
 M:	Mattijs Korpershoek <mkorpershoek@baylibre.com>
+R:	Igor Opaniuk <igor.opaniuk@gmail.com>
 S:	Maintained
 T:	git https://source.denx.de/u-boot/custodians/u-boot-dfu.git
 F:	cmd/avb.c
@@ -356,7 +362,7 @@ S:	Maintained
 T:	git https://source.denx.de/u-boot/custodians/u-boot-marvell.git
 F:	arch/arm/mach-kirkwood/
 F:	arch/arm/mach-mvebu/
-F:	drivers/ata/ahci_mvebu.c
+F:	drivers/ata/ahci_generic.c
 F:	drivers/clk/mvebu/
 F:	drivers/ddr/marvell/
 F:	drivers/gpio/mvebu_gpio.c
@@ -379,6 +385,14 @@ S:	Maintained
 T:	git https://source.denx.de/u-boot/custodians/u-boot-marvell.git
 F:	drivers/pci/pci-aardvark.c
 F:	drivers/pci/pci_mvebu.c
+
+ARM MARVELL PXA1908
+M:	Duje Mihanović <duje.mihanovic@skole.hr>
+S:	Maintained
+T:	git git://git.dujemihanovic.xyz/u-boot.git
+F:	arch/arm/dts/pxa1908*
+F:	arch/arm/mach-mmp/
+F:	include/configs/pxa1908.h
 
 ARM MARVELL SERIAL DRIVERS
 M:	Pali Rohár <pali@kernel.org>
@@ -406,9 +420,13 @@ F:	drivers/mmc/mtk-sd.c
 F:	drivers/phy/phy-mtk-*
 F:	drivers/pinctrl/mediatek/
 F:	drivers/power/domain/mtk-power-domain.c
+F:	drivers/pci/pcie_mediatek_gen3.c
+F:	drivers/pci/pcie_mediatek.c
+F:	drivers/pwm/pwm-mtk.c
 F:	drivers/ram/mediatek/
 F:	drivers/spi/mtk_snfi_spi.c
 F:	drivers/spi/mtk_spim.c
+F:	drivers/spi/mtk_snor.c
 F:	drivers/timer/mtk_timer.c
 F:	drivers/usb/host/xhci-mtk.c
 F:	drivers/usb/mtu3/
@@ -416,6 +434,7 @@ F:	drivers/watchdog/mtk_wdt.c
 F:	drivers/net/mtk_eth.c
 F:	drivers/net/mtk_eth.h
 F:	drivers/reset/reset-mediatek.c
+F:	drivers/serial/serial_mtk.c
 F:	include/dt-bindings/clock/mediatek,*
 F:	include/dt-bindings/power/mediatek,*
 F:	tools/mtk_image.c
@@ -625,6 +644,7 @@ L:	u-boot-qcom@groups.io
 S:	Maintained
 T:	git https://source.denx.de/u-boot/custodians/u-boot-snapdragon.git
 F:	configs/qcm6490_defconfig
+F:	configs/qcs9100_defconfig
 F:	drivers/*/*/pm8???-*
 F:	drivers/gpio/msm_gpio.c
 F:	drivers/mmc/msm_sdhci.c
@@ -854,6 +874,7 @@ M:	Michal Simek <michal.simek@amd.com>
 S:	Maintained
 T:	git https://source.denx.de/u-boot/custodians/u-boot-microblaze.git
 F:	arch/arm/mach-zynqmp/
+F:	drivers/bootcount/bootcount_zynqmp.c
 F:	drivers/clk/clk_zynqmp.c
 F:	driver/firmware/firmware-zynqmp.c
 F:	drivers/fpga/zynqpl.c
@@ -1545,6 +1566,7 @@ SANDBOX
 M:	Simon Glass <sjg@chromium.org>
 S:	Maintained
 F:	arch/sandbox/
+F:	configs/sandbox*
 F:	doc/arch/sandbox.rst
 F:	drivers/*/*sandbox*.c
 F:	include/dt-bindings/*/sandbox*.h
@@ -1605,6 +1627,7 @@ F:	drivers/mtd/nand/spi/
 SPI-NOR
 M:	Jagan Teki <jagan@amarulasolutions.com>
 M:	Vignesh R <vigneshr@ti.com>
+R:	Tudor Ambarus <tudor.ambarus@linaro.org>
 S:	Maintained
 F:	drivers/mtd/spi/
 F:	include/spi_flash.h
@@ -1690,6 +1713,7 @@ T:	git https://source.denx.de/u-boot/custodians/u-boot-tpm.git
 F:	cmd/tpm*
 F:	drivers/tpm/
 F:	include/tpm*
+F:	lib/tpm*
 
 TQ GROUP
 #M:	Martin Krause <martin.krause@tq-systems.de>
@@ -1725,6 +1749,11 @@ M:	Heiko Schocher <hs@denx.de>
 S:	Maintained
 T:	git https://source.denx.de/u-boot/custodians/u-boot-ubi.git
 F:	drivers/mtd/ubi/
+
+UFETCH
+M:	Caleb Connolly <caleb.connolly@linaro.org>
+S:	Maintained
+F:	cmd/ufetch.c
 
 UFS
 M:	Neil Armstrong <neil.armstrong@linaro.org>
@@ -1776,6 +1805,13 @@ UUID testing
 M:	Abdellatif El Khlifi <abdellatif.elkhlifi@arm.com>
 S:	Maintained
 F:	test/lib/uuid.c
+
+VBE
+M:	Simon Glass <sjg@chromium.org>
+S:	Maintained
+F:	boot/vbe*
+F:	common/spl_reloc.c
+F:	include/vbe.h
 
 VIDEO
 M:	Anatolij Gustschin <agust@denx.de>

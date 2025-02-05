@@ -562,12 +562,14 @@ int boot_ramdisk_high(ulong rd_data, ulong rd_len, ulong *initrd_start,
 			debug("   in-place initrd\n");
 			*initrd_start = rd_data;
 			*initrd_end = rd_data + rd_len;
-			lmb_reserve(rd_data, rd_len);
+			lmb_reserve(rd_data, rd_len, LMB_NONE);
 		} else {
 			if (initrd_high)
-				*initrd_start = (ulong)lmb_alloc_base(rd_len,
-								      0x1000,
-								      initrd_high);
+				*initrd_start =
+					(ulong)lmb_alloc_base(rd_len,
+								    0x1000,
+								    initrd_high,
+								    LMB_NONE);
 			else
 				*initrd_start = (ulong)lmb_alloc(rd_len,
 								 0x1000);
@@ -624,9 +626,10 @@ int boot_get_fpga(struct bootm_headers *images)
 	void *buf;
 	int conf_noffset;
 	int fit_img_result;
-	const char *uname, *name;
+	const char *uname, *name, *compatible;
 	int err;
 	int devnum = 0; /* TODO support multi fpga platforms */
+	int flags = 0;
 
 	if (!IS_ENABLED(CONFIG_FPGA))
 		return -ENOSYS;
@@ -674,20 +677,29 @@ int boot_get_fpga(struct bootm_headers *images)
 			return fit_img_result;
 		}
 
+		conf_noffset = fit_image_get_node(buf, uname);
+		compatible = fdt_getprop(buf, conf_noffset, "compatible", NULL);
+		if (!compatible) {
+			printf("'fpga' image without 'compatible' property\n");
+		} else {
+			if (CONFIG_IS_ENABLED(FPGA_LOAD_SECURE))
+				flags = fpga_compatible2flag(devnum, compatible);
+		}
+
 		if (!fpga_is_partial_data(devnum, img_len)) {
 			name = "full";
 			err = fpga_loadbitstream(devnum, (char *)img_data,
 						 img_len, BIT_FULL);
 			if (err)
 				err = fpga_load(devnum, (const void *)img_data,
-						img_len, BIT_FULL, 0);
+						img_len, BIT_FULL, flags);
 		} else {
 			name = "partial";
 			err = fpga_loadbitstream(devnum, (char *)img_data,
 						 img_len, BIT_PARTIAL);
 			if (err)
 				err = fpga_load(devnum, (const void *)img_data,
-						img_len, BIT_PARTIAL, 0);
+						img_len, BIT_PARTIAL, flags);
 		}
 
 		if (err)
@@ -829,7 +841,8 @@ int boot_get_cmdline(ulong *cmd_start, ulong *cmd_end)
 
 	barg = IF_ENABLED_INT(CONFIG_SYS_BOOT_GET_CMDLINE, CONFIG_SYS_BARGSIZE);
 	cmdline = (char *)(ulong)lmb_alloc_base(barg, 0xf,
-				env_get_bootm_mapsize() + env_get_bootm_low());
+				env_get_bootm_mapsize() + env_get_bootm_low(),
+				LMB_NONE);
 	if (!cmdline)
 		return -1;
 
@@ -862,9 +875,10 @@ int boot_get_cmdline(ulong *cmd_start, ulong *cmd_end)
 int boot_get_kbd(struct bd_info **kbd)
 {
 	*kbd = (struct bd_info *)(ulong)lmb_alloc_base(sizeof(struct bd_info),
-						       0xf,
-						       env_get_bootm_mapsize() +
-						       env_get_bootm_low());
+							     0xf,
+							     env_get_bootm_mapsize() +
+							     env_get_bootm_low(),
+							     LMB_NONE);
 	if (!*kbd)
 		return -1;
 
@@ -1073,8 +1087,8 @@ fallback:
 			}
 
 			/* get script subimage data address and length */
-			if (fit_image_get_data_and_size(fit_hdr, noffset,
-							&fit_data, &fit_len)) {
+			if (fit_image_get_data(fit_hdr, noffset, &fit_data,
+					       &fit_len)) {
 				puts("Could not find script subimage data\n");
 				return 1;
 			}

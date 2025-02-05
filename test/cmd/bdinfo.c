@@ -26,7 +26,7 @@
 DECLARE_GLOBAL_DATA_PTR;
 
 /* Declare a new bdinfo test */
-#define BDINFO_TEST(_name, _flags)	UNIT_TEST(_name, _flags, bdinfo_test)
+#define BDINFO_TEST(_name, _flags)	UNIT_TEST(_name, _flags, bdinfo)
 
 static int test_num_l(struct unit_test_state *uts, const char *name,
 		      ulong value)
@@ -104,10 +104,10 @@ static int lmb_test_dump_region(struct unit_test_state *uts,
 {
 	struct lmb_region *rgn = lmb_rgn_lst->data;
 	unsigned long long base, size, end;
-	enum lmb_flags flags;
+	u32 flags;
 	int i;
 
-	ut_assert_nextline(" %s.count = 0x%hx", name, lmb_rgn_lst->count);
+	ut_assert_nextline(" %s.count = %#x", name, lmb_rgn_lst->count);
 
 	for (i = 0; i < lmb_rgn_lst->count; i++) {
 		base = rgn[i].base;
@@ -119,7 +119,7 @@ static int lmb_test_dump_region(struct unit_test_state *uts,
 			ut_assert_nextlinen(" %s[%d]\t[", name, i);
 			continue;
 		}
-		ut_assert_nextlinen(" %s[%d]\t[0x%llx-0x%llx], 0x%08llx bytes flags: ",
+		ut_assert_nextlinen(" %s[%d]\t[%#llx-%#llx], %#llx bytes, flags: ",
 				    name, i, base, end, size);
 	}
 
@@ -131,7 +131,7 @@ static int lmb_test_dump_all(struct unit_test_state *uts)
 	struct lmb *lmb = lmb_get();
 
 	ut_assert_nextline("lmb_dump_all:");
-	ut_assertok(lmb_test_dump_region(uts, &lmb->free_mem, "memory"));
+	ut_assertok(lmb_test_dump_region(uts, &lmb->available_mem, "memory"));
 	ut_assertok(lmb_test_dump_region(uts, &lmb->used_mem, "reserved"));
 
 	return 0;
@@ -282,11 +282,3 @@ static int bdinfo_test_eth(struct unit_test_state *uts)
 	return 0;
 }
 BDINFO_TEST(bdinfo_test_eth, UTF_CONSOLE);
-
-int do_ut_bdinfo(struct cmd_tbl *cmdtp, int flag, int argc, char *const argv[])
-{
-	struct unit_test *tests = UNIT_TEST_SUITE_START(bdinfo_test);
-	const int n_ents = UNIT_TEST_SUITE_COUNT(bdinfo_test);
-
-	return cmd_ut_category("bdinfo", "bdinfo_test_", tests, n_ents, argc, argv);
-}

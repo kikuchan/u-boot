@@ -39,7 +39,7 @@ static void disable_thermal_cpu_nodes(void *blob, u32 num_disabled_cores, u32 ma
 		for (j = 0; j < cnt; j++)
 			cooling_dev[j] = cpu_to_fdt32(cooling_dev[j]);
 
-		ret = fdt_setprop(blob, nodeoff, "cooling-device", &cooling_dev,
+		ret = fdt_setprop(blob, nodeoff, "cooling-device", cooling_dev,
 				  sizeof(__le32) * (num_le32 - num_disabled_cores * 3));
 		if (ret < 0) {
 			printf("Warning: %s, cooling-device setprop failed %d\n",
@@ -115,7 +115,7 @@ int fixup_thermal_trips(void *blob, const char *name)
 
 		temp = 0;
 		if (!strcmp(type, "critical"))
-			temp = 1000 * (maxc - 5);
+			temp = 1000 * maxc;
 		else if (!strcmp(type, "passive"))
 			temp = 1000 * (maxc - 10);
 		if (temp) {

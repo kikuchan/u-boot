@@ -255,7 +255,7 @@ static u32 zynqmp_qspi_bus_select(struct zynqmp_qspi_priv *priv)
 					 GQSPI_GFIFO_CS_LOWER |
 					 GQSPI_GFIFO_CS_UPPER;
 		else
-			debug("Wrong Bus selection:0x%x\n", priv->bus);
+			log_debug("Wrong Bus selection:0x%x\n", priv->bus);
 	} else {
 		if (priv->u_page)
 			gqspi_fifo_reg = GQSPI_GFIFO_LOW_BUS |
@@ -870,8 +870,8 @@ static int zynqmp_qspi_exec_op(struct spi_slave *slave,
 	priv->bus = 0;
 
 	if (priv->is_parallel) {
-		if (slave->flags & SPI_XFER_MASK)
-			priv->bus = (slave->flags & SPI_XFER_MASK) >> 8;
+		if (slave->flags & SPI_XFER_LOWER)
+			priv->bus = 1;
 		if (zynqmp_qspi_update_stripe(op))
 			priv->stripe = 1;
 	}
@@ -890,7 +890,7 @@ static int zynqmp_qspi_exec_op(struct spi_slave *slave,
 	zynqmp_qspi_chipselect(priv, 0);
 
 	priv->is_parallel = false;
-	slave->flags &= ~SPI_XFER_MASK;
+	slave->flags &= ~SPI_XFER_LOWER;
 
 	return ret;
 }

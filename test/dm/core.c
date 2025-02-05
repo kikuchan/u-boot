@@ -186,9 +186,29 @@ static int dm_test_compare_node_name(struct unit_test_state *uts)
 	ut_assert(ofnode_valid(node));
 	ut_assert(ofnode_name_eq(node, "mmio-bus"));
 
+	ut_assert(!ofnode_name_eq(node, "mmio-bus@0"));
+
 	return 0;
 }
 DM_TEST(dm_test_compare_node_name, UTF_SCAN_PDATA);
+
+/* compare node names ignoring the unit address */
+static int dm_test_compare_node_name_unit(struct unit_test_state *uts)
+{
+	ofnode node;
+
+	node = ofnode_path("/mmio-bus@0");
+	ut_assert(ofnode_valid(node));
+	ut_assert(ofnode_name_eq_unit(node, "mmio-bus"));
+
+	ut_assert(ofnode_name_eq_unit(node, "mmio-bus@0"));
+	ut_assert(!ofnode_name_eq_unit(node, "mmio-bus@1"));
+	ut_assert(!ofnode_name_eq_unit(node, "mmio-bu"));
+	ut_assert(!ofnode_name_eq_unit(node, "mmio-buss@0"));
+
+	return 0;
+}
+DM_TEST(dm_test_compare_node_name_unit, UTF_SCAN_PDATA);
 
 /* Test that binding with uclass plat setting occurs correctly */
 static int dm_test_autobind_uclass_pdata_valid(struct unit_test_state *uts)
@@ -999,6 +1019,56 @@ static int dm_test_remove_vital(struct unit_test_state *uts)
 }
 DM_TEST(dm_test_remove_vital, 0);
 
+/* Test removal of 'active' devices */
+static int dm_test_remove_active(struct unit_test_state *uts)
+{
+	struct udevice *normal, *dma, *vital, *dma_vital;
+
+	/* Skip the behaviour in test_post_probe() */
+	uts->skip_post_probe = 1;
+
+	ut_assertok(device_bind_by_name(uts->root, false, &driver_info_manual,
+					&normal));
+	ut_assertnonnull(normal);
+
+	ut_assertok(device_bind_by_name(uts->root, false, &driver_info_act_dma,
+					&dma));
+	ut_assertnonnull(dma);
+
+	ut_assertok(device_bind_by_name(uts->root, false,
+					&driver_info_vital_clk, &vital));
+	ut_assertnonnull(vital);
+
+	ut_assertok(device_bind_by_name(uts->root, false,
+					&driver_info_act_dma_vital_clk,
+					&dma_vital));
+	ut_assertnonnull(dma_vital);
+
+	/* Probe the devices */
+	ut_assertok(device_probe(normal));
+	ut_assertok(device_probe(dma));
+	ut_assertok(device_probe(vital));
+	ut_assertok(device_probe(dma_vital));
+
+	/* Check that devices are active right now */
+	ut_asserteq(true, device_active(normal));
+	ut_asserteq(true, device_active(dma));
+	ut_asserteq(true, device_active(vital));
+	ut_asserteq(true, device_active(dma_vital));
+
+	/* Remove active devices in an ordered way */
+	dm_remove_devices_active();
+
+	/* Check that all devices are inactive right now */
+	ut_asserteq(true, device_active(normal));
+	ut_asserteq(false, device_active(dma));
+	ut_asserteq(true, device_active(vital));
+	ut_asserteq(false, device_active(dma_vital));
+
+	return 0;
+}
+DM_TEST(dm_test_remove_active, 0);
+
 static int dm_test_uclass_before_ready(struct unit_test_state *uts)
 {
 	struct uclass *uc;
@@ -1351,3 +1421,25 @@ static int dm_test_dev_get_mem(struct unit_test_state *uts)
 	return 0;
 }
 DM_TEST(dm_test_dev_get_mem, UTF_SCAN_FDT);
+
+/* Test uclass_try_first_device() */
+static int dm_test_try_first_device(struct unit_test_state *uts)
+{
+	struct udevice *dev;
+
+	/* Check that it doesn't create a device or uclass */
+	ut_assertnull(uclass_find(UCLASS_TEST));
+	ut_assertnull(uclass_try_first_device(UCLASS_TEST));
+	ut_assertnull(uclass_try_first_device(UCLASS_TEST));
+	ut_assertnull(uclass_find(UCLASS_TEST));
+
+	/* Create a test device */
+	ut_assertok(device_bind_by_name(uts->root, false, &driver_info_manual,
+					&dev));
+	dev = uclass_try_first_device(UCLASS_TEST);
+	ut_assertnonnull(dev);
+	ut_asserteq(UCLASS_TEST, device_get_uclass_id(dev));
+
+	return 0;
+}
+DM_TEST(dm_test_try_first_device, 0);
