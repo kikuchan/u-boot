@@ -6,6 +6,7 @@
 
 #include <clk-uclass.h>
 #include <dm.h>
+#include <dm/devres.h>
 #include <errno.h>
 #include <log.h>
 #include <reset.h>
@@ -17,56 +18,379 @@
 
 extern U_BOOT_DRIVER(sunxi_reset);
 
-static const struct ccu_clk_gate *plat_to_gate(struct ccu_plat *plat,
-					       unsigned long id)
+static int sunxi_clk_update_muldiv_by(struct sunxi_clk_bitinfo *muldiv,
+				      u32 value, uint shift, uint *mul,
+				      uint *div)
 {
-	if (id >= plat->desc->num_gates)
-		return NULL;
+	u32 v = (value >> shift) & ((1 << muldiv->width) - 1);
 
-	return &plat->desc->gates[id];
-}
-
-static int sunxi_set_gate(struct clk *clk, bool on)
-{
-	struct ccu_plat *plat = dev_get_plat(clk->dev);
-	const struct ccu_clk_gate *gate = plat_to_gate(plat, clk->id);
-	u32 reg;
-
-	if (gate && (gate->flags & CCU_CLK_F_DUMMY_GATE))
-		return 0;
-
-	if (!gate || !(gate->flags & CCU_CLK_F_IS_VALID)) {
-		printf("%s: (CLK#%ld) unhandled\n", __func__, clk->id);
-		return 0;
+	switch (muldiv->flags) {
+	case SUNXI_CLK_BITINFO_MUL:
+		*mul *= v + 1;
+		break;
+	case SUNXI_CLK_BITINFO_DIV:
+		*div *= v + 1;
+		break;
+	case SUNXI_CLK_BITINFO_DIVEXP:
+		*div *= (1 << v);
+		break;
+	default:
+		return -EINVAL;
 	}
 
-	debug("%s: (CLK#%ld) off#0x%x, BIT(%d)\n", __func__,
-	      clk->id, gate->off, ilog2(gate->bit));
+	if (muldiv->min >= 0 && muldiv->min > v)
+		return -ERANGE;
 
-	reg = readl(plat->base + gate->off);
-	if (on)
-		reg |= gate->bit;
-	else
-		reg &= ~gate->bit;
-
-	writel(reg, plat->base + gate->off);
+	if (muldiv->max >= 0 && muldiv->max < v)
+		return -ERANGE;
 
 	return 0;
 }
 
-static int sunxi_clk_enable(struct clk *clk)
+static ulong sunxi_clk_apply_muldiv(const struct ccu_clk_gate *gate,
+				    ulong source, u32 value)
 {
-	return sunxi_set_gate(clk, true);
+	uint mul = 1;
+	uint div = 1;
+	int err = 0;
+
+	for (int i = 0; i < gate->num_muldiv; i++) {
+		struct sunxi_clk_bitinfo *muldiv = gate->muldiv[i];
+
+		switch (sunxi_clk_update_muldiv_by(muldiv, value, muldiv->shift,
+						   &mul, &div)) {
+		case -EINVAL:
+			return -EINVAL;
+		case -ERANGE:
+			err = -ERANGE;
+			break;
+		default:
+			break;
+		}
+	}
+
+	return source * mul / div;
 }
 
-static int sunxi_clk_disable(struct clk *clk)
+static int sunxi_clk_find_best_reg_value(const struct ccu_clk_gate *gate,
+					 ulong target, ulong source, u32 *value,
+					 u32 *mask)
 {
-	return sunxi_set_gate(clk, false);
+	int err;
+	uint mul, div;
+	uint shift = 0;
+	ulong best_delta = ULONG_MAX;
+	ulong best_i = 0;
+	ulong delta;
+	ulong N = 1;
+
+	for (int i = 0; i < gate->num_muldiv; i++)
+		N *= 1 << gate->muldiv[i]->width;
+
+	for (ulong i = 0; i < N; i++) {
+		mul = 1;
+		div = 1;
+		shift = 0;
+		for (int j = 0; j < gate->num_muldiv; j++) {
+			struct sunxi_clk_bitinfo *muldiv = gate->muldiv[j];
+
+			err = sunxi_clk_update_muldiv_by(muldiv, i, shift, &mul,
+							 &div);
+			if (err)
+				goto skip;
+
+			shift += muldiv->width;
+		}
+
+		delta = abs(target / mul - source / div) * mul;
+		if (delta < best_delta) {
+			best_delta = delta;
+			best_i = i;
+		}
+skip:;
+	}
+
+	shift = 0;
+	*value = 0;
+	*mask = 0;
+	for (int j = 0; j < gate->num_muldiv; j++) {
+		int v = (best_i >> shift) & ((1 << gate->muldiv[j]->width) - 1);
+		*value |= v << gate->muldiv[j]->shift;
+		*mask |= ((1 << gate->muldiv[j]->width) - 1)
+			 << gate->muldiv[j]->shift;
+		shift += gate->muldiv[j]->width;
+	}
+
+	return 0;
+}
+
+static inline const struct ccu_clk_gate *clk_to_gate(struct clk *clk)
+{
+	struct ccu_plat *plat = dev_get_plat(clk->dev);
+
+	if (clk->id < plat->desc->num_gates)
+		return &plat->desc->gates[clk->id];
+
+	return NULL;
+}
+
+static inline void *clk_to_reg(struct clk *clk)
+{
+	const struct ccu_clk_gate *gate = clk_to_gate(clk);
+	struct ccu_plat *plat = dev_get_plat(clk->dev);
+
+	if (gate && (gate->flags & CCU_CLK_F_IS_VALID) && gate->off >= 0)
+		return plat->base + gate->off;
+
+	return NULL;
+}
+
+static int sunxi_clk_ops_request(struct clk *clk);
+static ulong sunxi_clk_get_parent_rate(struct clk *clk);
+
+int sunxi_clk_set_mux(struct clk *clk, uint mux)
+{
+	const struct ccu_clk_gate *gate = clk_to_gate(clk);
+
+	if (gate->mux.shift < 0)
+		return -EINVAL;
+
+	if (gate->mux.count <= mux)
+		return -EINVAL;
+
+	clrsetbits_32(clk_to_reg(clk),
+		      GENMASK(gate->mux.shift + gate->mux.width - 1,
+			      gate->mux.shift),
+		      mux << gate->mux.shift);
+
+	return 0;
+}
+
+int sunxi_clk_get_mux(struct clk *clk)
+{
+	const struct ccu_clk_gate *gate = clk_to_gate(clk);
+	u32 value;
+
+	if (gate->mux.shift < 0)
+		return 0;
+
+	value = readl(clk_to_reg(clk));
+
+	return (value >> gate->mux.shift) & ((1 << gate->mux.width) - 1);
+}
+
+static struct clk *sunxi_clk_get(struct udevice *clkdev, int id)
+{
+	struct ccu_plat *plat = dev_get_plat(clkdev);
+	struct clk *clk;
+
+	if (id < plat->desc->num_gates && plat->clocks[id])
+		return plat->clocks[id];
+
+	clk = devm_kzalloc(clkdev, sizeof(*clk), GFP_KERNEL);
+	if (unlikely(!clk))
+		return NULL;
+
+	clk->dev = clkdev;
+	clk->id = id;
+	clk->data = 0;
+
+	plat->clocks[id] = clk;
+
+	sunxi_clk_ops_request(clk);
+
+	return clk;
+}
+static inline struct clk **clk_to_parents(struct clk *clk)
+{
+	return (struct clk **)clk->data;
+}
+
+struct clk *sunxi_clk_get_parent(struct clk *clk)
+{
+	const struct ccu_clk_gate *gate = clk_to_gate(clk);
+	struct clk **parents = clk_to_parents(clk);
+
+	// MUX
+	if (gate && (gate->flags & CCU_CLK_F_IS_VALID) && gate->mux.count > 0) {
+		int mux = sunxi_clk_get_mux(clk);
+
+		if (mux < gate->mux.count)
+			return parents[mux];
+	}
+
+	return NULL;
+}
+
+static int sunxi_clk_set_gate(struct clk *clk, bool on)
+{
+	const struct ccu_clk_gate *gate = clk_to_gate(clk);
+	void *reg = clk_to_reg(clk);
+	struct clk *parent;
+
+	if (!gate || !(gate->flags & CCU_CLK_F_IS_VALID)) {
+		log_warning("%s.%03ld: unhandled\n", clk->dev->name, clk->id);
+		return 0;
+	}
+
+	if (on && (parent = sunxi_clk_get_parent(clk)))
+		clk_enable(parent);
+
+	if (gate->off < 0)
+		return 0; /* No gate */
+
+	clrsetbits_32(reg, gate->bit, on ? gate->bit : 0);
+
+	return 0;
+}
+
+static bool sunxi_clk_has_muldiv(struct clk *clk)
+{
+	const struct ccu_clk_gate *gate = clk_to_gate(clk);
+
+	return gate && gate->num_muldiv > 0;
+}
+
+static ulong sunxi_clk_get_rate(struct clk *clk)
+{
+	const struct ccu_clk_gate *gate = clk_to_gate(clk);
+	ulong rate = sunxi_clk_get_parent_rate(clk);
+	u32 val;
+	int fixed_div = gate->fixed_div > 0 ? gate->fixed_div : 1;
+
+	if (sunxi_clk_has_muldiv(clk)) {
+		val = readl(clk_to_reg(clk));
+		return sunxi_clk_apply_muldiv(gate, rate, val) / fixed_div;
+	}
+
+	return rate / fixed_div;
+}
+
+static ulong sunxi_clk_get_parent_rate(struct clk *clk)
+{
+	struct clk *parent;
+
+	parent = sunxi_clk_get_parent(clk);
+	if (parent)
+		return clk_get_rate(parent);
+
+	return 0;
+}
+
+static ulong sunxi_clk_set_rate_common(struct clk *clk, ulong rate, bool set)
+{
+	const struct ccu_clk_gate *gate = clk_to_gate(clk);
+	struct clk *parent;
+	ulong parent_rate;
+	u32 value, mask;
+	int fixed_div = gate->fixed_div > 0 ? gate->fixed_div : 1;
+
+	if (!sunxi_clk_has_muldiv(clk)) {
+		parent = sunxi_clk_get_parent(clk);
+		if (!parent) {
+			if (set)
+				log_warning(
+					"Set rate on a simple gate: %s.%03ld, rate = %ld",
+					clk->dev->name, clk->id, rate);
+			return 0;
+		}
+		return (set ? clk_set_rate : clk_round_rate)(parent,
+							     rate * fixed_div) /
+		       fixed_div;
+	}
+
+	parent_rate = sunxi_clk_get_parent_rate(clk);
+
+	sunxi_clk_find_best_reg_value(gate, rate * fixed_div, parent_rate,
+				      &value, &mask);
+	if (set)
+		clrsetbits_32(clk_to_reg(clk), mask, value);
+
+	return sunxi_clk_apply_muldiv(gate, parent_rate, value) / fixed_div;
+}
+
+bool sunxi_clk_is_sunxi_dev(struct udevice *dev)
+{
+	return dev_get_driver_ops(dev) == &sunxi_clk_ops;
+}
+
+static ulong sunxi_clk_ops_round_rate(struct clk *clk, ulong rate)
+{
+	return sunxi_clk_set_rate_common(clk, rate, false);
+}
+
+static ulong sunxi_clk_ops_set_rate(struct clk *clk, ulong rate)
+{
+	return sunxi_clk_set_rate_common(clk, rate, true);
+}
+
+static ulong sunxi_clk_ops_get_rate(struct clk *clk)
+{
+	return sunxi_clk_get_rate(clk);
+}
+
+static int sunxi_clk_ops_enable(struct clk *clk)
+{
+	return sunxi_clk_set_gate(clk, true);
+}
+
+static int sunxi_clk_ops_disable(struct clk *clk)
+{
+	return sunxi_clk_set_gate(clk, false);
+}
+
+static int sunxi_clk_ops_request(struct clk *clk)
+{
+	struct ccu_plat *plat = dev_get_plat(clk->dev);
+	const struct ccu_clk_gate *gate = clk_to_gate(clk);
+	struct clk *parent;
+
+	if (gate->mux.count > 0) {
+		struct clk **parents = devm_kcalloc(clk->dev, gate->mux.count,
+						    sizeof(struct clk *),
+						    GFP_KERNEL);
+
+		for (int i = 0; i < gate->mux.count; i++) {
+			if (gate->mux.parents[i] >
+			    CLKREF(plat->desc->num_gates)) {
+				/* self reference */
+				parent = sunxi_clk_get(
+					clk->dev,
+					CLKUNREF(gate->mux.parents[i]));
+				if (!parent) {
+					log_err("Can't get the parent clock: %ld",
+						CLKUNREF(gate->mux.parents[i]));
+					parent = NULL;
+					//return -EINVAL;
+				}
+			} else {
+				/* external reference */
+				parent = devm_clk_get(clk->dev,
+						      gate->mux.parents[i]);
+				if (IS_ERR(parent)) {
+					log_err("Can't get the parent clock: %s",
+						gate->mux.parents[i]);
+					parent = NULL;
+					//return -EINVAL;
+				}
+			}
+
+			parents[i] = parent;
+		}
+
+		clk->data = (ulong)parents;
+	}
+
+	return 0;
 }
 
 struct clk_ops sunxi_clk_ops = {
-	.enable = sunxi_clk_enable,
-	.disable = sunxi_clk_disable,
+	.request = sunxi_clk_ops_request,
+	.round_rate = sunxi_clk_ops_round_rate,
+	.set_rate = sunxi_clk_ops_set_rate,
+	.get_rate = sunxi_clk_ops_get_rate,
+	.enable = sunxi_clk_ops_enable,
+	.disable = sunxi_clk_ops_disable,
 };
 
 static int sunxi_clk_bind(struct udevice *dev)
@@ -104,6 +428,9 @@ static int sunxi_clk_of_to_plat(struct udevice *dev)
 	plat->desc = (const struct ccu_desc *)dev_get_driver_data(dev);
 	if (!plat->desc)
 		return -EINVAL;
+
+	plat->clocks = devm_kcalloc(dev, plat->desc->num_gates,
+				    sizeof(struct clk *), GFP_KERNEL);
 
 	return 0;
 }
