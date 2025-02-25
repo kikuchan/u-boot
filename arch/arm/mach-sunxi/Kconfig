@@ -603,6 +603,7 @@ config MACH_SUN50I_H616
 	select ARM64
 	select DRAM_SUN50I_H616
 	select SUN50I_GEN_H6
+	select SUNXI_DE
 	imply OF_UPSTREAM
 
 config MACH_SUN50I_A133
@@ -610,6 +611,7 @@ config MACH_SUN50I_A133
 	select ARM64
 	select DRAM_SUN50I_A133
 	select SUN50I_GEN_H6
+	select SUNXI_DE
 	imply OF_UPSTREAM
 
 endchoice
@@ -1195,6 +1197,9 @@ config VIDEO_LCD_IF_LVDS
 config SUNXI_DE2
 	bool
 
+config SUNXI_DE
+	bool
+
 config VIDEO_DE2
 	bool "Display Engine 2 video driver"
 	depends on SUNXI_DE2
@@ -1206,6 +1211,17 @@ config VIDEO_DE2
 	---help---
 	Say y here if you want to build DE2 video driver which is present on
 	newer SoCs. Currently only HDMI output is supported.
+
+config VIDEO_SUNXI_DE
+	bool "Display Engine video driver"
+	depends on SUNXI_DE
+	select VIDEO
+	select PANEL
+	select REGMAP
+	imply VIDEO_DT_SIMPLEFB
+	---help---
+	Say y here if you want to build DT-based DE video driver.
+	Currently only LCD or MIPI-DSI output is supported.
 
 config VIDEO_SUNXI_MIPI_DSI
 	bool "Enable MIPI-DSI on the Allwinner SoCs"
