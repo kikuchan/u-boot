@@ -1207,6 +1207,14 @@ config VIDEO_DE2
 	Say y here if you want to build DE2 video driver which is present on
 	newer SoCs. Currently only HDMI output is supported.
 
+config VIDEO_SUNXI_MIPI_DSI
+	bool "Enable MIPI-DSI on the Allwinner SoCs"
+	select VIDEO_MIPI_DSI
+	select REGMAP
+	select BITREVERSE
+	select PHY_SUNXI_MIPI_DPHY
+	help
+	  Enables the MIPI-DSI host driver for the Allwinner SoCs.
 
 choice
 	prompt "LCD panel support"
