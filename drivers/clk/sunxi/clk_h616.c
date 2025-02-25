@@ -3,20 +3,39 @@
  * Copyright (C) 2021 Jernej Skrabec <jernej.skrabec@siol.net>
  */
 
-#include <clk-uclass.h>
-#include <dm.h>
-#include <errno.h>
 #include <clk/sunxi.h>
-#include <dt-bindings/clock/sun50i-h616-ccu.h>
-#include <dt-bindings/reset/sun50i-h616-ccu.h>
-#include <linux/bitops.h>
+
+#include "clk_h616.h"
 
 static struct ccu_clk_gate h616_gates[] = {
-	[CLK_PLL_PERIPH0]	= GATE(0x020, BIT(31) | BIT(27)),
+	[CLK_PLL_PERIPH0]	= GATE_REF_DIV(CLK_PLL_PERIPH0_2X, 2),
+	[CLK_PLL_PERIPH0_2X]	= GATE_PARENT(0x020, BIT(31) | BIT(29) | BIT(27),
+					      NO_MUX("hosc"),
+					      PLL_FACTOR_N_BIT(15, 8, 11, 254),
+					      PLL_INPUT_DIV_M_BIT(1),
+					      PLL_OUTPUT_DIV_D_BIT(0)),
+
+	[CLK_PLL_VIDEO0]	= GATE_REF_DIV(CLK_PLL_VIDEO0_4X, 4),
+	[CLK_PLL_VIDEO0_4X]	= GATE_PARENT(0x040, BIT(31) | BIT(29) | BIT(27),
+					      NO_MUX("hosc"),
+					      PLL_FACTOR_N_BIT(15, 8, 11, 254),
+					      PLL_INPUT_DIV_M_BIT(1),
+					      PLL_OUTPUT_DIV_D_BIT(0)),
+
+	[CLK_PLL_DE]		= GATE_PARENT(0x060, BIT(31) | BIT(29) | BIT(27),
+					      NO_MUX("hosc"),
+					      PLL_FACTOR_N_BIT(15, 8, 11, 254),
+					      PLL_INPUT_DIV_M_BIT(1),
+					      PLL_OUTPUT_DIV_D_BIT(0)),
 
 	[CLK_APB1]		= GATE_DUMMY,
 
-	[CLK_DE]		= GATE(0x600, BIT(31)),
+	[CLK_DE]		= GATE_PARENT(0x600, BIT(31),
+					      MUX_BIT(24, 24,
+						      CLKREF(CLK_PLL_DE),
+						      CLKREF(CLK_PLL_PERIPH0_2X)),
+					      DIV_FACTOR_M_BIT(3, 0)),
+
 	[CLK_BUS_DE]		= GATE(0x60c, BIT(0)),
 
 	[CLK_NAND0]		= GATE(0x810, BIT(31)),
@@ -76,6 +95,21 @@ static struct ccu_clk_gate h616_gates[] = {
 	[CLK_HDMI_CEC]		= GATE(0xb10, BIT(31)),
 	[CLK_BUS_HDMI]		= GATE(0xb1c, BIT(0)),
 	[CLK_BUS_TCON_TOP]	= GATE(0xb5c, BIT(0)),
+
+	[CLK_TCON_LCD0]		= GATE_PARENT(0xb60, BIT(31),
+					      MUX_BIT(26, 24,
+						      CLKREF(CLK_PLL_VIDEO0_4X),
+						      CLKREF(CLK_PLL_VIDEO1_4X),
+						      CLKREF(CLK_PLL_VIDEO2_4X),
+						      NULL,
+						      CLKREF(CLK_PLL_PERIPH0)),
+					      /*DIV_FACTOR_N_BIT(9, 8),
+					      DIV_FACTOR_M_BIT(3, 0)*/),
+
+	[CLK_TCON_LCD1]		= GATE(0xb64, BIT(31)),
+	[CLK_BUS_TCON_LCD0]	= GATE(0xb7c, BIT(0)),
+	[CLK_BUS_TCON_LCD1]	= GATE(0xb7c, BIT(1)),
+
 	[CLK_TCON_TV0]		= GATE(0xb80, BIT(31)),
 	[CLK_TCON_TV1]		= GATE(0xb84, BIT(31)),
 	[CLK_BUS_TCON_TV0]	= GATE(0xb9c, BIT(0)),
@@ -130,6 +164,8 @@ static struct ccu_reset h616_resets[] = {
 	[RST_BUS_HDMI]		= RESET(0xb1c, BIT(16)),
 	[RST_BUS_HDMI_SUB]	= RESET(0xb1c, BIT(17)),
 	[RST_BUS_TCON_TOP]	= RESET(0xb5c, BIT(16)),
+	[RST_BUS_TCON_LCD0]	= RESET(0xb7c, BIT(16)),
+	[RST_BUS_TCON_LCD1]	= RESET(0xb7c, BIT(17)),
 	[RST_BUS_TCON_TV0]	= RESET(0xb9c, BIT(16)),
 	[RST_BUS_TCON_TV1]	= RESET(0xb9c, BIT(17)),
 };
