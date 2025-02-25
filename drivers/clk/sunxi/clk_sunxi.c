@@ -453,6 +453,9 @@ extern const struct ccu_desc a100_ccu_desc;
 extern const struct ccu_desc h6_r_ccu_desc;
 extern const struct ccu_desc r40_ccu_desc;
 extern const struct ccu_desc v3s_ccu_desc;
+extern const struct ccu_desc sunxi_de2_ccu_desc;
+extern const struct ccu_desc sunxi_de33_ccu_desc;
+extern const struct ccu_desc sunxi_tcon_top_desc;
 
 static const struct udevice_id sunxi_clk_ids[] = {
 #ifdef CONFIG_CLK_SUN4I_A10
@@ -550,6 +553,19 @@ static const struct udevice_id sunxi_clk_ids[] = {
 #ifdef CONFIG_CLK_SUNIV_F1C100S
 	{ .compatible = "allwinner,suniv-f1c100s-ccu",
 	  .data = (ulong)&f1c100s_ccu_desc },
+#endif
+#ifdef CONFIG_VIDEO_SUNXI_DE
+	/* Display Engine */
+	{ .compatible = "allwinner,sun8i-v3s-de2-clk",
+	  .data = (ulong)&sunxi_de2_ccu_desc },
+	{ .compatible = "allwinner,sun50i-a64-de2-clk",
+	  .data = (ulong)&sunxi_de2_ccu_desc },
+	{ .compatible = "allwinner,sun50i-h616-de33-clk",
+	  .data = (ulong)&sunxi_de33_ccu_desc },
+
+	/* TCON_TOP */
+	{ .compatible = "allwinner,sun50i-a100-tcon-top",
+	  .data = (ulong)&sunxi_tcon_top_desc },
 #endif
 	{ }
 };
