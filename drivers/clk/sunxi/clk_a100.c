@@ -4,16 +4,39 @@
  */
 
 #include <clk/sunxi.h>
-#include <dt-bindings/clock/sun50i-a100-ccu.h>
-#include <dt-bindings/reset/sun50i-a100-ccu.h>
-#include <linux/bitops.h>
+
+#include "clk_a100.h"
 
 static struct ccu_clk_gate a100_gates[] = {
-	[CLK_PLL_PERIPH0]	= GATE(0x020, BIT(31) | BIT(27)),
+	[CLK_PLL_PERIPH0]	= GATE_REF_DIV(CLK_PLL_PERIPH0_2X, 2),
+	[CLK_PLL_PERIPH0_2X]	= GATE_PARENT(0x020, BIT(31) | BIT(29) | BIT(27),
+					      NO_MUX("hosc"),
+					      PLL_FACTOR_N_BIT(15, 8, 11, 254),
+					      PLL_INPUT_DIV_M_BIT(1),
+					      PLL_OUTPUT_DIV_D_BIT(0)),
+
+	[CLK_PLL_VIDEO0]	= GATE_REF_DIV(CLK_PLL_VIDEO0_4X, 4),
+	[CLK_PLL_VIDEO0_2X]	= GATE_REF_DIV(CLK_PLL_VIDEO0_4X, 2),
+	[CLK_PLL_VIDEO0_4X]	= GATE_PARENT(0x040, BIT(31) | BIT(29) | BIT(27),
+					      NO_MUX("hosc"),
+					      PLL_FACTOR_N_BIT(15, 8, 11, 254),
+					      PLL_INPUT_DIV_M_BIT(1),
+					      PLL_OUTPUT_DIV_D_BIT(0)),
+
+	[CLK_PLL_COM]		= GATE_PARENT(0x060, BIT(31) | BIT(29) | BIT(27),
+					      NO_MUX("hosc"),
+					      PLL_FACTOR_N_BIT(15, 8, 11, 254),
+					      PLL_INPUT_DIV_M_BIT(1),
+					      PLL_OUTPUT_DIV_D_BIT(0)),
 
 	[CLK_APB1]		= GATE_DUMMY,
 
-	[CLK_DE]		= GATE(0x600, BIT(31)),
+	[CLK_DE]		= GATE_PARENT(0x600, BIT(31),
+					      MUX_BIT(24, 24,
+						      CLKREF(CLK_PLL_COM),
+						      CLKREF(CLK_PLL_PERIPH0_2X)),
+					      DIV_FACTOR_M_BIT(3, 0)),
+
 	[CLK_BUS_DE]		= GATE(0x60c, BIT(0)),
 
 	[CLK_BUS_MMC0]		= GATE(0x84c, BIT(0)),
@@ -53,7 +76,28 @@ static struct ccu_clk_gate a100_gates[] = {
 	[CLK_BUS_EHCI1]		= GATE(0xa8c, BIT(5)),
 	[CLK_BUS_OTG]		= GATE(0xa8c, BIT(8)),
 
-	[CLK_TCON_LCD]		= GATE(0xb60, BIT(31)),
+	[CLK_MIPI_DSI]		= GATE_PARENT(0xb24, BIT(31),
+					      MUX_BIT(25, 24,
+						      "hosc",
+						      CLKREF(CLK_PLL_PERIPH0_2X),
+						      CLKREF(CLK_PLL_PERIPH0)),
+					      /*DIV_FACTOR_M_BIT(3, 0)*/),
+
+	[CLK_BUS_MIPI_DSI]	= GATE(0xb4c, BIT(0)),
+
+	[CLK_BUS_DPSS_TOP0]	= GATE(0xabc, BIT(0)),
+	[CLK_BUS_DPSS_TOP1]	= GATE(0xacc, BIT(0)),
+
+	[CLK_TCON_LCD]		= GATE_PARENT(0xb60, BIT(31),
+					      MUX_BIT(26, 24,
+						      CLKREF(CLK_PLL_VIDEO0_4X),
+						      CLKREF(CLK_PLL_VIDEO1_4X),
+						      CLKREF(CLK_PLL_VIDEO2_4X),
+						      CLKREF(CLK_PLL_VIDEO3_4X),
+						      CLKREF(CLK_PLL_PERIPH0)),
+					      /*DIV_FACTOR_N_BIT(9, 8),
+					      DIV_FACTOR_M_BIT(3, 0)*/),
+
 	[CLK_BUS_TCON_LCD]	= GATE(0xb7c, BIT(0)),
 };
 
@@ -90,6 +134,11 @@ static struct ccu_reset a100_resets[] = {
 	[RST_BUS_EHCI0]		= RESET(0xa8c, BIT(20)),
 	[RST_BUS_EHCI1]		= RESET(0xa8c, BIT(21)),
 	[RST_BUS_OTG]		= RESET(0xa8c, BIT(24)),
+
+	[RST_BUS_DPSS_TOP0]	= RESET(0xabc, BIT(16)),
+	[RST_BUS_DPSS_TOP1]	= RESET(0xacc, BIT(16)),
+
+	[RST_BUS_MIPI_DSI]	= RESET(0xb4c, BIT(16)),
 
 	[RST_BUS_TCON_LCD]	= RESET(0xb7c, BIT(16)),
 };
